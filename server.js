@@ -201,12 +201,12 @@ app.post(
 
 if (
   !/^\d+$/.test(cleanPhone) ||
-  cleanPhone.length !== 7
+  cleanPhone.length !== 10
 ) {
   return res.json({
     success: false,
     message:
-      "Phone number must be exactly 7 digits",
+      "Phone number must be exactly 10 digits",
   });
 }
 
