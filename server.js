@@ -197,20 +197,17 @@ app.post(
         });
       }
 
-      const cleanPhone =
-  phone.replace(/\D/g,'');
+      const cleanPhone = phone.replace(/\D/g, "");
 
-if(cleanPhone.length < 7){
-
+if (
+  !/^\d+$/.test(cleanPhone) ||
+  cleanPhone.length !== 7
+) {
   return res.json({
-
-    success:false,
-
+    success: false,
     message:
-      "Phone number is invalid"
-
+      "Phone number must be exactly 7 digits",
   });
-
 }
 
       const files = req.files.map(
@@ -221,7 +218,7 @@ if(cleanPhone.length < 7){
         firstName,
         lastName,
         email,
-        phone,
+        phone: cleanPhone,
         city,
         address,
         notes,
