@@ -11,7 +11,14 @@
   >
 
   <title>Customer Form</title>
+<link rel="manifest" href="/manifest.json">
 
+<meta name="theme-color" content="#ffe600">
+
+<link
+  rel="apple-touch-icon"
+  href="/icon-192x192.png"
+>
   <link
     rel="stylesheet"
     href="style.css"
@@ -222,10 +229,10 @@
 const cleanPhone =
   phone.replace(/\D/g,'');
 
-if(cleanPhone.length < 7){
+if(cleanPhone.length !== 10)
 
   alert(
-    "Phone number is invalid"
+    "Phone number must be exactly 10 digits"
   );
 
   return;
