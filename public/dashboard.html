@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <title>Dashboard</title>
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+</head>
+
+<body>
+
+  <div class="dashboard-container">
+
+    <div class="top-bar">
+
+      <img
+        src="logo.png"
+        class="customer-logo"
+      >
+
+      <div class="top-buttons">
+
+        <button
+          class="dashboard-btn"
+          onclick="goCustomerForm()"
+        >
+          Add Customer
+        </button>
+
+        <button
+          class="green-btn"
+          onclick="groupEmail()"
+        >
+          Group Email
+        </button>
+
+        <button
+          class="blue-btn"
+          onclick="window.print()"
+        >
+          Print
+        </button>
+
+        <button
+          class="yellow-btn"
+          onclick="manualBackup()"
+        >
+          Create Backup
+        </button>
+
+        <button
+          class="logout-btn"
+          onclick="logout()"
+        >
+          Sign Out
+        </button>
+
+      </div>
+
+    </div>
+
+    <input
+      type="text"
+      id="searchInput"
+      class="search-input"
+      placeholder="Search customer..."
+      onkeyup="searchCustomer()"
+    >
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>
+            Name
+          </th>
+
+          <th>
+            Phone
+          </th>
+
+          <th>
+            Email
+          </th>
+
+          <th>
+            City
+          </th>
+
+          <th>
+            Actions
+          </th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="customerTable">
+
+      </tbody>
+
+    </table>
+
+    <div
+      id="customerDetails"
+      class="customer-details"
+    >
+
+    </div>
+
+  </div>
+
+<script>
+
+  let allCustomers = [];
+
+  async function loadCustomers(){
+
+    const response =
+      await fetch("/customers");
+
+    const customers =
+      await response.json();
+
+    allCustomers = customers;
+
+    renderCustomers(customers);
+
+  }
+
+  function renderCustomers(customers){
+
+    const table =
+      document.getElementById(
+        "customerTable"
+      );
+
+    table.innerHTML = "";
+
+    customers.forEach(customer => {
+
+      const row =
+        document.createElement("tr");
+
+      row.innerHTML = `
+
+        <td>
+          ${customer.firstName}
+          ${customer.lastName}
+        </td>
+
+        <td>
+          ${customer.phone}
+        </td>
+
+        <td>
+          ${customer.email}
+        </td>
+
+        <td>
+          ${customer.city}
+        </td>
+
+        <td>
+
+          <button
+            class="action-btn view-btn"
+            onclick="viewCustomer('${customer._id}')"
+          >
+            View
+          </button>
+
+          <button
+            class="action-btn delete-btn"
+            onclick="deleteCustomer('${customer._id}')"
+          >
+            Delete
+          </button>
+
+          <button
+            class="action-btn green-btn"
+            onclick="sendEmail('${customer.email}')"
+          >
+            Email
+          </button>
+<button
+  class="action-btn blue-btn"
+  onclick="printCustomer('${customer._id}')"
+>
+  Print
+</button>
+        </td>
+
+      `;
+
+      table.appendChild(row);
+
+    });
+
+  }
+
+  function searchCustomer(){
+
+    const value =
+      document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase();
+
+    const filtered =
+      allCustomers.filter(customer =>
+
+        customer.firstName
+          .toLowerCase()
+          .includes(value)
+
+        ||
+
+        customer.lastName
+          .toLowerCase()
+          .includes(value)
+
+        ||
+
+        customer.email
+          .toLowerCase()
+          .includes(value)
+
+        ||
+
+        customer.phone
+          .includes(value)
+
+      );
+
+    renderCustomers(filtered);
+
+  }
+
+  function viewCustomer(id){
+
+    const customer =
+      allCustomers.find(
+        c => c._id === id
+      );
+
+    const details =
+      document.getElementById(
+        "customerDetails"
+      );
+
+    let filesHtml = "";
+
+    if(customer.files){
+
+      customer.files.forEach(file => {
+
+        filesHtml += `
+
+          <a
+            href="/uploads/${file}"
+            target="_blank"
+            class="file-link"
+          >
+            ${file}
+          </a>
+
+        `;
+
+      });
+
+    }
+
+    details.style.display =
+      "block";
+
+    details.innerHTML = `
+
+      <h2>
+        ${customer.firstName}
+        ${customer.lastName}
+      </h2>
+
+      <p>
+        <strong>Email:</strong>
+        ${customer.email}
+      </p>
+
+      <p>
+        <strong>Phone:</strong>
+        ${customer.phone}
+      </p>
+
+      <p>
+        <strong>City:</strong>
+        ${customer.city}
+      </p>
+
+      <p>
+        <strong>Address:</strong>
+        ${customer.address || ""}
+      </p>
+
+      <p>
+        <strong>Notes:</strong>
+        ${customer.notes || ""}
+      </p>
+
+      <div>
+        ${filesHtml}
+      </div>
+
+      <button
+        class="logout-btn close-btn"
+        onclick="closeCustomer()"
+      >
+        Close
+      </button>
+
+    `;
+
+  }
+
+  function closeCustomer(){
+
+    document
+      .getElementById(
+        "customerDetails"
+      )
+      .style.display = "none";
+
+  }
+
+  async function deleteCustomer(id){
+
+    const confirmDelete =
+      confirm(
+        "Delete this customer?"
+      );
+
+    if(!confirmDelete) return;
+
+    await fetch(
+      "/delete-customer/" + id,
+      {
+        method:"DELETE"
+      }
+    );
+
+    loadCustomers();
+
+  }
+
+  function sendEmail(email){
+
+    window.location.href =
+      `mailto:${email}`;
+
+  }
+
+  function groupEmail(){
+
+    const emails =
+      allCustomers
+        .map(c => c.email)
+        .join(",");
+
+    window.location.href =
+      `mailto:${emails}`;
+
+  }
+
+  async function manualBackup(){
+
+    await fetch("/manual-backup");
+
+    alert(
+      "Backup Created"
+    );
+
+  }
+
+  function goCustomerForm(){
+
+    window.location.href =
+      "customer.html";
+
+  }
+
+  function logout(){
+
+    localStorage.removeItem(
+      "token"
+    );
+
+    window.location.href =
+      "login.html";
+
+  }
+
+  loadCustomers();
+function printCustomer(id){
+
+  const customer =
+    allCustomers.find(
+      c => c._id === id
+    );
+
+  const printWindow =
+    window.open(
+      "",
+      "",
+      "width=900,height=700"
+    );
+
+  printWindow.document.write(`
+
+    <html>
+
+    <head>
+
+      <title>
+        Customer Print
+      </title>
+
+      <style>
+
+        body{
+          font-family:Arial;
+          padding:40px;
+        }
+
+        h1{
+          color:#222;
+        }
+
+        p{
+          font-size:18px;
+          margin:10px 0;
+        }
+
+      </style>
+
+    </head>
+
+    <body>
+
+      <h1>
+        ${customer.firstName}
+        ${customer.lastName}
+      </h1>
+
+      <p>
+        <strong>Email:</strong>
+        ${customer.email}
+      </p>
+
+      <p>
+        <strong>Phone:</strong>
+        ${customer.phone}
+      </p>
+
+      <p>
+        <strong>City:</strong>
+        ${customer.city}
+      </p>
+
+      <p>
+        <strong>Address:</strong>
+        ${customer.address || ""}
+      </p>
+
+      <p>
+        <strong>Notes:</strong>
+        ${customer.notes || ""}
+      </p>
+
+    </body>
+
+    </html>
+
+  `);
+
+  printWindow.document.close();
+
+  printWindow.print();
+
+}
+</script>
+
+</body>
+
+</html>
